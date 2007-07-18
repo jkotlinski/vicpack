@@ -1,0 +1,8 @@
+#summary What's new in the latest release?
+#labels Featured,Phase-Support
+
+= Changelog =
+
+17th july 2007: v0.06
+
+Initial public release. Support Multicolor, Hires, FLI, MCI, Escos... 
