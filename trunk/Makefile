@@ -20,6 +20,19 @@ vicpack: $(SRCS:.ml=.cmx)
 clean::
 	rm -f vicpack vicpack.byt
 
+vicpack-w32: vicpack
+	mkdir vicpack-w32
+	cp ~/bin/acme.exe vicpack-w32
+	cp vicpack.exe vicpack-w32
+	cp /usr/X11R6/bin/cygX11-6.dll vicpack-w32
+	cp /usr/bin/cygwin1.dll vicpack-w32
+	cp /usr/bin/cygjpeg-62.dll vicpack-w32
+	cp /usr/bin/cygpng12.dll vicpack-w32
+	cp /usr/bin/cygz.dll vicpack-w32
+	cp /usr/bin/cygtiff-5.dll vicpack-w32
+	zip -r vicpack-w32.zip vicpack-w32
+	rm -rf vicpack-w32
+
 vicpack-osx: vicpack
 	mkdir vicpack-osx
 	cp ~/bin/acme vicpack-osx
@@ -72,5 +85,5 @@ examples.zip: examples/*.png examples/Makefile
 	$(CAMLYACC) $<
 
 clean::
-	rm -f *.cm[iox] *~ .*~ *.o *.s *.exe
+	rm -f *.cm[iox] *~ .*~ *.o *.s *.exe *.zip *.tgz
 
