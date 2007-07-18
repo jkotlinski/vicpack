@@ -20,6 +20,10 @@ vicpack: $(SRCS:.ml=.cmx)
 clean::
 	rm -f vicpack vicpack.byt
 
+examples.zip: examples/*.png examples/Makefile
+	rm -f examples.zip
+	zip examples.zip examples/*.png examples/Makefile
+
 .SUFFIXES:
 .SUFFIXES: .ml .mli .cmo .cmi .cmx .mll .mly
 
