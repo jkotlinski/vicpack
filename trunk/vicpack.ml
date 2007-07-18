@@ -749,7 +749,7 @@ let process_charlist mode bg escos unique_chars charwidth charheight charlist fi
 let unique_chars = ref false
 and mode = ref Hires
 and escos = ref false
-and escos_2 = ref false
+and escos_no_ystretch = ref false
 and interlace = ref false
 and use_sprites = ref false
 and custom_char_height = ref 0
@@ -773,10 +773,10 @@ Arg.parse [
     "Convert to FLI");
     ("-mci", Arg.Unit (fun () -> mode := Multicolor; interlace := true),
     "Convert to MCI");
-    ("-e", Arg.Unit (fun () -> escos := true ),
-    "ESCOS: Convert to sprites (in: 1x pixel width)");
-    ("-e2", Arg.Unit (fun () -> escos := true; escos_2 := true),
-    "ESCOS: Convert to sprites (in: 2x pixel width)");
+    ("-e", Arg.Unit (fun () -> escos := true; escos_no_ystretch := true),
+    "ESCOS: Convert to sprites (no vertical stretch)");
+    ("-e2", Arg.Unit (fun () -> escos := true ),
+    "ESCOS: Convert to sprites (2x vertical stretch)");
     ("-s", Arg.Unit (fun () -> use_sprites := true),
     "Use sprite overlays (hires only)");
     ("-u", Arg.Unit (fun () -> unique_chars := true),
@@ -804,8 +804,8 @@ usage: vicpack [-options] files
 -mc: multicolor
 -fli: FLI
 -mci: MCI
--e: ESCOS - convert to sprites (in: 1x pixel width)
--e2: ESCOS - convert to sprites (in: 2x pixel width)
+-e: ESCOS - convert to sprites (no vertical stretch)
+-e2: ESCOS - convert to sprites (2x vertical stretch)
 -bg n: force background color n (for use with multicolor)
 -border n: custom border color n
 -s: use sprite overlays (hires only)
@@ -833,7 +833,8 @@ For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
             | _ -> raise (Invalid_argument "not supported") 
         in
 
-        let rgb = if !escos_2 then
+        let rgb = if !escos_no_ystretch then
+            (* halve width *)
             rgb#resize None (rgb#width/2) rgb#height
         else
             rgb
