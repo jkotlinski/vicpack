@@ -809,25 +809,8 @@ usage: vicpack [-options] files
 -d: debug mode
 -p: generate .prg file (requires acme)
 
-For best results, use Pepto's palette:
-
-    00 00 00
-    FF FF FF
-    68 37 2B
-    70 A4 B2
-    6F 3D 86
-    58 8D 43
-    35 28 79
-    B8 C7 6F
-    6F 4F 25
-    43 39 00
-    9A 67 59
-    44 44 44
-    6C 6C 6C
-    9A D2 84
-    6C 5E B5
-    95 95 95\n"
-
+For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
+"
     end;
     List.iter (fun file ->
         let rgb =
