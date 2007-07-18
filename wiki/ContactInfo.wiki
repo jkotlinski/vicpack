@@ -1,0 +1,7 @@
+#summary Contact information
+#labels Phase-Support,Featured
+
+= Get in Touch! =
+
+Send a mail to kotlinski@gmail.com for feature suggestions and bug reports.
+
