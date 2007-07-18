@@ -636,7 +636,7 @@ let find_bg_colors charwidth charlist mode =
     !bg_colors
 ;;
 
-let do_generate_prg file mode interlace bg bg2 use_sprites =
+let do_generate_prg path file mode interlace bg bg2 use_sprites =
     let src = 
         if mode = Hires then 
             if use_sprites then
@@ -665,7 +665,7 @@ let do_generate_prg file mode interlace bg bg2 use_sprites =
 
     fprintf oc "%s"  str;
     close_out oc;
-    let cmd = "acme " ^ asmfilename in
+    let cmd = path ^ "acme " ^ asmfilename in
     printf "%s\n"  cmd;
     let status = Unix.system cmd in 
     match status with
@@ -755,7 +755,13 @@ and custom_char_height = ref 0
 and bg = ref 0xff
 and debug = ref false
 and generate_prg = ref false
-and files = ref [] in
+and files = ref []
+and path =
+    if Str.string_match (Str.regexp "^.*[\\|/]") Sys.argv.(0) 0 then
+        Str.matched_string Sys.argv.(0)
+    else
+        ""
+in
 Arg.parse [
     ("-h", Arg.Unit (fun () -> mode := Hires),
     "Convert to hires");
@@ -897,7 +903,7 @@ For best results, use Pepto's palette:
             bg := process_charlist charlist file;
 
         if !generate_prg then
-            do_generate_prg file !mode !interlace !bg !bg2 !use_sprites; 
+            do_generate_prg path file !mode !interlace !bg !bg2 !use_sprites; 
 
     ) files;;
 
