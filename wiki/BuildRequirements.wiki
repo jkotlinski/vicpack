@@ -1,0 +1,13 @@
+#summary Build requirements
+#labels Phase-Implementation
+
+= Build requirements =
+
+  * All normal unixey stuff
+  * OCaml
+  * OCaml ExtLib
+  * CamlImages
+    * libtiff
+    * libpng
+    * libungif
+    * libjpeg
