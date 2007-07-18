@@ -20,6 +20,13 @@ vicpack: $(SRCS:.ml=.cmx)
 clean::
 	rm -f vicpack vicpack.byt
 
+vicpack-osx: vicpack
+	mkdir vicpack-osx
+	cp ~/bin/acme vicpack-osx
+	cp vicpack vicpack-osx
+	tar cvzf vicpack-osx.tgz vicpack-osx
+	rm -rf vicpack-osx
+
 examples.zip: examples/*.png examples/Makefile
 	rm -f examples.zip
 	zip examples.zip examples/*.png examples/Makefile
