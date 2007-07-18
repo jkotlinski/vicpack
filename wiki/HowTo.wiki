@@ -1,0 +1,22 @@
+#summary Installation and usage
+#labels Phase-Support,Featured
+
+== Installation ==
+
+=== Win32 ===
+
+Extract archive to e.g. c:\charconv64 and add c:\charconv64 to your system PATH. (My computer -> Properties -> Advanced -> Environment variables)
+
+
+=== OS X ===
+
+In Terminal:
+
+  # tar xvzf charconv64-v006-osx.tar.gz
+  # cd charconv64-v006-osx
+  # sudo cp charconv64 /usr/local/bin/
+  # sudo cp acme /usr/local/bin/ (optional)
+
+== Usage ==
+
+Some examples can be found in the examples folder.
