@@ -46,8 +46,9 @@ let multicolor_viewer = basic_header ^ "
 	lda     #$08 ; video matrix = 4000, bitmap base = 6000
 	sta     $D018
 
-	lda     #__BGCOLOR__
+    lda     #__BORDERCOLOR__
 	sta     $D020
+	lda     #__BGCOLOR__
 	sta     $D021
 ;
 ; memcpy((void*)0xd800, (void*)0x2000, 0x400);
@@ -112,7 +113,7 @@ MODE = NORMAL
 	lda #$48 ;video matrix = 5000, bitmap base = 6000
 	sta	$d018
 
-	lda	#0
+	lda	#__BORDERCOLOR__
 	sta	$d020
 	sta	$d021
 
@@ -180,7 +181,7 @@ let hires_viewer = basic_header ^ "
 	lda #$48 ;video matrix = 5000, bitmap base = 6000
 	sta	$d018
 
-	lda	#0
+	lda	#__BORDERCOLOR__
 	sta	$d020
 	sta	$d021
 
@@ -291,10 +292,11 @@ start:
 	lda #$96       ; VIC bank $4000-$7FFF
 	sta $dd00
 
-	; COPY 3c00-3fff to d800-dbff
-    ldx #__BGCOLOR__
+    ldx #__BORDERCOLOR__
 	stx $d020
+    ldx #__BGCOLOR__
 	stx $d021
+	; COPY 3c00-3fff to d800-dbff
 	ldy #$04
 	ldx #$00
 	stx $d015      ; disable sprites
@@ -370,9 +372,10 @@ let mci_viewer = basic_header ^ "
 	lda     #$08 ; video matrix = 8000, bitmap base = a000
 	sta     $D018
 
+    lda     #__BORDERCOLOR__
+	sta     $d020
 	lda     #__BGCOLOR__
-	sta     $D020
-	sta     $D021
+	sta     $d021
 
 .loop
     lda $d012

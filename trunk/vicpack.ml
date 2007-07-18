@@ -636,7 +636,7 @@ let find_bg_colors charwidth charlist mode =
     !bg_colors
 ;;
 
-let do_generate_prg path file mode interlace bg bg2 use_sprites =
+let do_generate_prg path file mode interlace bg bg2 border use_sprites =
     let src = 
         if mode = Hires then 
             if use_sprites then
@@ -659,6 +659,7 @@ let do_generate_prg path file mode interlace bg bg2 use_sprites =
     let str = Str.global_replace (Str.regexp "__FILE__") file src in
     let str = Str.global_replace (Str.regexp "__FILE1__") (file ^ "1") str in
     let str = Str.global_replace (Str.regexp "__FILE2__") (file ^ "2") str in
+    let str = Str.global_replace (Str.regexp "__BORDERCOLOR__") (string_of_int border) str in
     let str = Str.global_replace (Str.regexp "__BGCOLOR__") (string_of_int bg) str in
     let str = Str.global_replace (Str.regexp "__BGCOLOR1__") (string_of_int bg) str in
     let str = Str.global_replace (Str.regexp "__BGCOLOR2__") (string_of_int bg2) str in
@@ -753,6 +754,7 @@ and interlace = ref false
 and use_sprites = ref false
 and custom_char_height = ref 0
 and bg = ref 0xff
+and border = ref 0
 and debug = ref false
 and generate_prg = ref false
 and files = ref []
@@ -781,8 +783,10 @@ Arg.parse [
     "Unique chars, generate map file");
     ("-y", Arg.Int (fun i -> custom_char_height := i),
     "Custom char height (ESCOS: sprite height)");
-    ("-b", Arg.Int (fun i -> bg := i; assert ( (i > -1) & (i < 16) ) ),
+    ("-bg", Arg.Int (fun i -> bg := i; assert ( (i > -1) & (i < 16) ) ),
     "Force background color");
+    ("-border", Arg.Int (fun i -> border := i; assert ( (i > -1) & (i < 16) ) ),
+    "Custom border color");
     ("-d", Arg.Unit (fun () -> debug := true),
     "Debug mode");
     ("-p", Arg.Unit (fun () -> generate_prg := true),
@@ -802,7 +806,8 @@ usage: vicpack [-options] files
 -mci: MCI
 -e: ESCOS - convert to sprites (in: 1x pixel width)
 -e2: ESCOS - convert to sprites (in: 2x pixel width)
--b n: force background color n (for use with multicolor)
+-bg n: force background color n (for use with multicolor)
+-border n: custom border color n
 -s: use sprite overlays (hires only)
 -u: unique chars, generate map file
 -y n: custom char/sprite height
@@ -886,7 +891,7 @@ For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
             bg := process_charlist charlist file;
 
         if !generate_prg then
-            do_generate_prg path file !mode !interlace !bg !bg2 !use_sprites; 
+            do_generate_prg path file !mode !interlace !bg !bg2 !border !use_sprites; 
 
     ) files;;
 
