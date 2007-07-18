@@ -6,3 +6,7 @@
 17th july 2007: v0.06
 
 Initial public release. Support Multicolor, Hires, FLI, MCI, Escos... 
+
+== Coming Up ==
+
+Path detection (no need to change system path for finding ACME)
