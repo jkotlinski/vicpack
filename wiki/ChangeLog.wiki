@@ -3,7 +3,13 @@
 
 = Changelog =
 
-17th july 2007: v0.06
+19th July 2007: v0.07
+
+  * Add path detection (no need to change system path in win32)
+  * Add option -border n, for setting custom border color
+  * Small interface changes
+
+17th July 2007: v0.06
 
 Initial public release. Support Multicolor, Hires, FLI, MCI, Escos... 
 
