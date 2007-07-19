@@ -5,7 +5,7 @@
 
 === Win32 ===
 
-Extract archive to e.g. c:\vicpack and add c:\vicpack to your system PATH. (My computer -> Properties -> Advanced -> Environment variables)
+Extract archive to e.g. c:\vicpack. Launch program with c:\vicpack\vicpack from DOS command line.
 
 
 === OS X ===
