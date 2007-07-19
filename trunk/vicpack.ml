@@ -38,6 +38,7 @@ module IntSet = Set.Make(Int);;
 type gfxmode = 
     | Multicolor
     | Hires
+    | Asslace
     | Fli;;
 
 let rec c64charcompare c1 c2 =
@@ -397,6 +398,19 @@ let find_closest_color (c:Color.rgb) =
     !closest_color
 ;;
 
+let prepare_for_asslace bmp =
+    for y = 0 to bmp#height - 1 do
+        for x = 0 to (bmp#width / 4) - 1 do
+            let x = x * 4 in
+            (* swap x+2, y with x+3, y *)
+            let tmp = bmp#get (x+3) y in
+            bmp#set (x+3) y (bmp#get (x+2) y);
+            bmp#set (x+2) y tmp
+        done
+    done;
+    bmp
+;;
+
 let convert_to_64_colors bmp =
     let width = bmp#width in
     let height = bmp#height in
@@ -495,7 +509,7 @@ let dump_mc_chars escos_bg1 escos_bg2 mode charwidth charheight bg charlist infi
 
     let vram_colors = ref [] in
     let write ch =
-        if mode = Multicolor then
+        if mode = Multicolor || mode = Asslace then
             mc_write charwidth charheight ch bg escos_bg1 escos_bg2 oc_chars oc_c oc_v
         else
             (* Fli *)
@@ -647,9 +661,12 @@ let do_generate_prg path file mode interlace bg bg2 border use_sprites =
             if mode = Fli then
                 Asm6510.fli_viewer
             else
-                (* mode = Multicolor *)
+                (* mode = Multicolor or Asslace *)
                 if interlace then
-                    Asm6510.mci_viewer
+                    if mode = Asslace then
+                        Asm6510.asslace_viewer
+                    else
+                        Asm6510.mci_viewer
                 else
                     Asm6510.multicolor_viewer
     in
@@ -686,7 +703,7 @@ let process_charlist mode bg escos unique_chars charwidth charheight charlist fi
     let bg_sprite_1 = ref 0
     and bg_sprite_2 = ref 1 
     and bg = ref (bg) in
-    if (mode = Multicolor || mode = Fli) && (!bg = 0xff) then
+    if (mode = Multicolor || mode = Fli || mode = Asslace) && (!bg = 0xff) then
         if not escos then
             begin
                 let bgcolors = find_bg_colors charwidth charlist mode in
@@ -728,6 +745,7 @@ let process_charlist mode bg escos unique_chars charwidth charheight charlist fi
         match mode with
         | Hires -> dump_hires_chars 
         | Multicolor
+        | Asslace
         | Fli -> dump_mc_chars !bg_sprite_1 !bg_sprite_2 mode
     in
 
@@ -769,6 +787,10 @@ Arg.parse [
     "Convert to hires");
     ("-mc", Arg.Unit (fun () -> mode := Multicolor),
     "Convert to multicolor");
+    (*
+    ("-ass", Arg.Unit (fun () -> mode := Asslace; interlace := true),
+    "Convert to Asslace");
+    *)
     ("-fli", Arg.Unit (fun () -> mode := Fli),
     "Convert to FLI");
     ("-mci", Arg.Unit (fun () -> mode := Multicolor; interlace := true),
@@ -841,6 +863,13 @@ For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
         in
 
         convert_to_64_colors rgb;
+
+        let rgb = 
+            if !mode = Asslace then
+                prepare_for_asslace rgb
+            else
+                rgb
+        in
         
         assert (not (!escos && !use_sprites));
 
