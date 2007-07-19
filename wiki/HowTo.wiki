@@ -7,7 +7,7 @@
 
 Extract archive to e.g. c:\vicpack. Launch program with c:\vicpack\vicpack from DOS command line.
 
-Note: Because of a bug in ACME, it's not possible to use drive letters for the image file path with -p option.
+Note: Because of a bug in ACME, it's not possible to use drive letters for the image file path when using the -p option.
 
 === OS X ===
 
