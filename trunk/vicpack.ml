@@ -683,7 +683,9 @@ let do_generate_prg path file mode interlace bg bg2 border use_sprites =
 
     fprintf oc "%s"  str;
     close_out oc;
-    let cmd = path ^ "acme " ^ asmfilename in
+    let acme = 
+        if Sys.os_type = "Cygwin" then "./acme.exe" else "acme" in
+    let cmd = path ^ acme ^ " " ^ asmfilename in
     printf "%s\n"  cmd;
     let status = Unix.system cmd in 
     match status with
@@ -840,6 +842,12 @@ For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
 "
     end;
     List.iter (fun file ->
+        let file =
+            if Sys.os_type = "Cygwin" then
+                Str.global_replace (Str.regexp "\\") "/" file
+            else
+                file
+        in
         let rgb =
             let oimage = OImages.load file [] in
             match OImages.tag oimage with
