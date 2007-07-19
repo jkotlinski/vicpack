@@ -457,3 +457,96 @@ let mci_viewer = basic_header ^ "
 !bin \"__FILE2__-c.bin\"
 ";;
 
+let asslace_viewer = basic_header ^ "
+
+	lda #$7f
+	sta $dc0d      ; no timer IRQs
+	lda $dc0d      ; clear timer IRQ flags
+
+	lda	$d0
+	lda     $D016 ;enable multicolor
+	ora     #$10
+	sta     $D016
+
+	lda     #$BB ;enable bitmap mode
+	sta     $D011
+
+	lda     #$08 ; video matrix = 8000, bitmap base = a000
+	sta     $D018
+
+    lda     #__BORDERCOLOR__
+	sta     $d020
+	lda     #__BGCOLOR__
+	sta     $d021
+
+.loop
+    lda $d012
+    cmp #$ff
+    bne .loop
+
+	lda     #$16 ;vic base = $4000
+	sta     $DD00
+
+	ldx	#0
+.memcpy1_1
+	lda	$2000, x
+	sta	$d800, x
+	lda	$2100, x
+	sta	$d900, x
+	dex
+	bne	.memcpy1_1
+
+.memcpy1_2
+	lda	$2200, x
+	sta	$da00, x
+	lda	$2300, x
+	sta	$db00, x
+	dex
+	bne	.memcpy1_2
+
+.loop2
+    lda $d012
+    cmp #$ff
+    bne .loop2
+
+	lda     #$15 ;vic base = $8000
+	sta     $DD00
+
+	ldx	#0
+.memcpy2_1
+	lda	$2400, x
+	sta	$d800, x
+	lda	$2500, x
+	sta	$d900, x
+	dex
+	bne	.memcpy2_1
+
+.memcpy2_2
+	lda	$2600, x
+	sta	$da00, x
+	lda	$2700, x
+	sta	$db00, x
+	dex
+	bne	.memcpy2_2
+
+    jmp .loop
+
+*= $4000
+!bin \"__FILE1__-v.bin\"
+
+*= $6000
+!bin \"__FILE1__.bin\"
+
+*= $8000
+!bin \"__FILE2__-v.bin\"
+
+*= $a000
+!bin \"__FILE2__.bin\"
+
+*= $2000
+!bin \"__FILE1__-c.bin\"
+
+*= $2400
+!bin \"__FILE2__-c.bin\"
+";;
+
