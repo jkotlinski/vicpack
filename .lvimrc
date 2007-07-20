@@ -1,2 +1,2 @@
-map <F7> :!./vicpack -p examples/hires.png<CR>
-map <F8> :!x64 examples/hires.png.prg<CR>
+map <F7> :!vicpack -mci -p examples/mci.png<CR>
+map <F8> :!x64 examples/mci.png.prg<CR>
