@@ -66,7 +66,8 @@ let get_colors ch =
     !colors
 ;;
 
-let write_char channel c = fprintf channel "%c" (char_of_int c);;
+let write_char channel c = fprintf channel "%c" c;;
+let write_int channel c = fprintf channel "%c" (char_of_int c);;
 
 let rec downsample lst =
     match lst with
@@ -116,7 +117,7 @@ let mc_fli_write hires_ch bg oc_char oc_c oc_v =
     in
 
     let cram_val = find_cram_color in
-    write_char oc_c cram_val;
+    write_int oc_c cram_val;
 
     colors := IntSet.remove bg !colors;
     colors := IntSet.remove cram_val !colors;
@@ -181,7 +182,7 @@ let mc_fli_write hires_ch bg oc_char oc_c oc_v =
         incr bytecount;
         if !bytecount = 4 then
             begin
-                write_char oc_char !bitmapval;
+                write_int oc_char !bitmapval;
                 bytecount := 0;
                 bitmapval := 0;
                 incr row
@@ -219,13 +220,14 @@ let mc_write charwidth charheight hires_ch bg escos_bg1 escos_bg2 oc_char (oc_c:
                 01 = upper nibble of video matrix
                 10 = lower nibble of video matrix
                 11 = color ram nibble $d800- *)
-            let cram_val = ref 0
+            let cram_val = ref 0xff
             and vram_val = ref 0
             and colorCount = (List.length colorList) in
             if colorCount = 1 then
                 begin
-                    cram_val := List.hd colorList;
-                    Array.set colorMap !cram_val 3
+                    let c1 = List.hd colorList in
+                    Array.set colorMap c1 1;
+                    vram_val := c1 lsl 4
                 end
             else if colorCount = 2 then
                 begin
@@ -245,8 +247,8 @@ let mc_write charwidth charheight hires_ch bg escos_bg1 escos_bg2 oc_char (oc_c:
                     Array.set colorMap !cram_val 3;
                     vram_val := (c1 lsl 4) + c2;
                 end;
-			write_char oc_c !cram_val;
-			write_char oc_v !vram_val;
+			write_int oc_c !cram_val;
+			write_int oc_v !vram_val;
         end
     else
         begin
@@ -262,7 +264,7 @@ let mc_write charwidth charheight hires_ch bg escos_bg1 escos_bg2 oc_char (oc_c:
                     cram_val := List.hd colorList;
                     Array.set colorMap !cram_val 3
                 end;
-			write_char oc_c !cram_val;
+			write_int oc_c !cram_val;
         end;
 
     let pixelCount = ref 0
@@ -274,7 +276,7 @@ let mc_write charwidth charheight hires_ch bg escos_bg1 escos_bg2 oc_char (oc_c:
         incr pixelCount;
 		if !pixelCount = 4 then
 		begin
-			write_char oc_char !rowValue;
+			write_int oc_char !rowValue;
             rowValue := 0;
             pixelCount := 0
         end
@@ -316,7 +318,7 @@ let hires_write ch oc_char (oc_v:out_channel) charwidth charheight bg =
                 end
         end;
 
-    write_char oc_v !vram_val;
+    write_int oc_v !vram_val;
 
     let pixelCount = ref 0 in
     let rowValue = ref 0 in
@@ -333,12 +335,12 @@ let hires_write ch oc_char (oc_v:out_channel) charwidth charheight bg =
         if !pixelCount = charwidth then
             begin
                 if charwidth = 8 then
-                    write_char oc_char !rowValue
+                    write_int oc_char !rowValue
                 else if charwidth = 24 then
                     begin
-                        write_char oc_char ((!rowValue lsr 16));
-                        write_char oc_char (((!rowValue lsr 8) land 0xff));
-                        write_char oc_char ((!rowValue land 0xff))
+                        write_int oc_char ((!rowValue lsr 16));
+                        write_int oc_char (((!rowValue lsr 8) land 0xff));
+                        write_int oc_char ((!rowValue land 0xff))
                     end
                 else
                     failwith "Unsupported charwidth";
@@ -473,7 +475,7 @@ let dump_charmap charmap infilename =
     let write ch = 
         begin
             assert (ch < 256);
-            write_char oc ch;
+            write_int oc ch;
         end
     in
     List.iter write charmap;
@@ -525,12 +527,12 @@ let dump_mc_chars escos_bg1 escos_bg2 mode charwidth charheight bg charlist infi
                 and j = ref (i) in
                 while !j < List.length !vram_colors do
                     let (vram1, vram2) = List.nth !vram_colors !j in
-                    write_char oc_v ((vram1 lsl 4) + vram2);
+                    write_int oc_v ((vram1 lsl 4) + vram2);
                     j := !j + 8;
                     incr wrote;
                 done;
                 for j = !wrote to 0x3ff do
-                    write_char oc_v 0;
+                    write_int oc_v 0;
                 done
             done
         end;
@@ -674,8 +676,6 @@ let do_generate_prg path file mode interlace bg bg2 border use_sprites =
     let oc = open_out asmfilename in
 
     let str = Str.global_replace (Str.regexp "__FILE__") file src in
-    let str = Str.global_replace (Str.regexp "__FILE1__") (file ^ "1") str in
-    let str = Str.global_replace (Str.regexp "__FILE2__") (file ^ "2") str in
     let str = Str.global_replace (Str.regexp "__BORDERCOLOR__") (string_of_int border) str in
     let str = Str.global_replace (Str.regexp "__BGCOLOR__") (string_of_int bg) str in
     let str = Str.global_replace (Str.regexp "__BGCOLOR1__") (string_of_int bg) str in
@@ -764,6 +764,28 @@ let process_charlist mode bg escos unique_chars charwidth charheight charlist fi
         dump_chars charwidth charheight !bg charlist file;
 
     !bg
+;;
+
+let merge_mci_cram file =
+    let cram_out = open_out_bin (file ^ "-c.bin")
+    and cram1_in = open_in_bin (file ^ "1-c.bin")
+    and cram2_in = open_in_bin (file ^ "2-c.bin")
+    in
+    try
+        while true do
+            let cram1 = input_char cram1_in
+            and cram2 = input_char cram2_in
+            in
+            write_char cram_out 
+                (if cram1 = (char_of_int 0xff) then
+                    cram2
+                else
+                    cram1)
+        done
+    with End_of_file -> ();
+    close_out cram_out;
+    close_in cram1_in;
+    close_in cram1_in;
 ;;
 
 let unique_chars = ref false
@@ -923,7 +945,9 @@ For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
                 List.iter handle charlist;
 
                 bg := process_charlist !chars1 (file ^ "1");
-                bg2 := process_charlist !chars2 (file ^ "2")
+                bg2 := process_charlist !chars2 (file ^ "2");
+
+                merge_mci_cram file
             end
         else
             bg := process_charlist charlist file;

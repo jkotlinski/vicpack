@@ -377,6 +377,19 @@ let mci_viewer = basic_header ^ "
 	lda     #__BGCOLOR__
 	sta     $d021
 
+	ldx	#0
+.memcpy
+	lda	$2000, x
+	sta	$d800, x
+	lda	$2100, x
+	sta	$d900, x
+	lda	$2200, x
+	sta	$da00, x
+	lda	$2300, x
+	sta	$db00, x
+	dex
+	bne	.memcpy
+
 .loop
     lda $d012
     cmp #$ff
@@ -388,23 +401,6 @@ let mci_viewer = basic_header ^ "
 	lda     $D016 ;x scroll = 0
     and #%11111000
 	sta     $D016
-
-	ldx	#0
-.memcpy1_1
-	lda	$2000, x
-	sta	$d800, x
-	lda	$2100, x
-	sta	$d900, x
-	dex
-	bne	.memcpy1_1
-
-.memcpy1_2
-	lda	$2200, x
-	sta	$da00, x
-	lda	$2300, x
-	sta	$db00, x
-	dex
-	bne	.memcpy1_2
 
 .loop2
     lda $d012
@@ -419,42 +415,22 @@ let mci_viewer = basic_header ^ "
     ora #1
 	sta     $D016
 
-	ldx	#0
-.memcpy2_1
-	lda	$2400, x
-	sta	$d800, x
-	lda	$2500, x
-	sta	$d900, x
-	dex
-	bne	.memcpy2_1
-
-.memcpy2_2
-	lda	$2600, x
-	sta	$da00, x
-	lda	$2700, x
-	sta	$db00, x
-	dex
-	bne	.memcpy2_2
-
     jmp .loop
 
 *= $4000
-!bin \"__FILE1__-v.bin\"
+!bin \"__FILE__1-v.bin\"
 
 *= $6000
-!bin \"__FILE1__.bin\"
+!bin \"__FILE__1.bin\"
 
 *= $8000
-!bin \"__FILE2__-v.bin\"
+!bin \"__FILE__2-v.bin\"
 
 *= $a000
-!bin \"__FILE2__.bin\"
+!bin \"__FILE__2.bin\"
 
 *= $2000
-!bin \"__FILE1__-c.bin\"
-
-*= $2400
-!bin \"__FILE2__-c.bin\"
+!bin \"__FILE__-c.bin\"
 ";;
 
 let asslace_viewer = basic_header ^ "
@@ -532,21 +508,21 @@ let asslace_viewer = basic_header ^ "
     jmp .loop
 
 *= $4000
-!bin \"__FILE1__-v.bin\"
+!bin \"__FILE__1-v.bin\"
 
 *= $6000
-!bin \"__FILE1__.bin\"
+!bin \"__FILE__1.bin\"
 
 *= $8000
-!bin \"__FILE2__-v.bin\"
+!bin \"__FILE__2-v.bin\"
 
 *= $a000
-!bin \"__FILE2__.bin\"
+!bin \"__FILE__2.bin\"
 
 *= $2000
-!bin \"__FILE1__-c.bin\"
+!bin \"__FILE__1-c.bin\"
 
 *= $2400
-!bin \"__FILE2__-c.bin\"
+!bin \"__FILE__2-c.bin\"
 ";;
 
