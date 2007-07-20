@@ -786,6 +786,8 @@ let merge_mci_cram file =
     close_out cram_out;
     close_in cram1_in;
     close_in cram1_in;
+    Unix.unlink (file ^ "1-c.bin");
+    Unix.unlink (file ^ "2-c.bin")
 ;;
 
 let unique_chars = ref false
