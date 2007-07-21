@@ -410,7 +410,7 @@ let prepare_for_asslace bmp =
         for x = 0 to (bmp#width / 4) - 1 do
             let x = x * 4 in
             swap (x+2) (x+3);
-            if y mod 2 = 1 then
+            if y mod 2 = 0 then
                 begin
                     swap x (x+1);
                     swap (x+2) (x+3);
@@ -783,26 +783,143 @@ let process_charlist mode bg escos unique_chars charwidth charheight debug charl
 
 let merge_mci_cram file =
     let cram_out = open_out_bin (file ^ "-c.bin")
+    and vram1_out = open_out_bin (file ^ "1-vo.bin")
+    and vram2_out = open_out_bin (file ^ "2-vo.bin")
+    and char1_out = open_out_bin (file ^ "1o.bin")
+    and char2_out = open_out_bin (file ^ "2o.bin")
     and cram1_in = open_in_bin (file ^ "1-c.bin")
     and cram2_in = open_in_bin (file ^ "2-c.bin")
+    and vram1_in = open_in_bin (file ^ "1-v.bin")
+    and vram2_in = open_in_bin (file ^ "2-v.bin")
+    and char1_in = open_in_bin (file ^ "1.bin")
+    and char2_in = open_in_bin (file ^ "2.bin")
+    and read_64_char channel =
+        let ch = ref [] in
+        for i = 0 to 7 do
+            ch := !ch @ [(int_of_char (input_char channel))]
+        done;
+        !ch
     in
     try
         while true do
-            let cram1 = input_char cram1_in
-            and cram2 = input_char cram2_in
-            in
-            write_char cram_out 
-                (if cram1 = (char_of_int 0xff) then
-                    cram2
+            let char1 = read_64_char char1_in
+            and char2 = read_64_char char2_in
+            and cram1 = (int_of_char (input_char cram1_in))
+            and cram2 = (int_of_char (input_char cram2_in))
+            and vram1 = (int_of_char (input_char vram1_in))
+            and vram2 = (int_of_char (input_char vram2_in)) in
+            let (vram1, vram2, cram, char1, char2) =
+                if cram1 = 0xff then
+                    (vram1, vram2, cram2, char1, char2)
                 else
-                    cram1)
+                    begin
+                        if cram2 != 0xff && cram1 != cram2 then
+                            begin
+                                let found_match = ref false
+                                and colors1 = Array.of_list [vram1 lsr 4; vram1 land 0xf; cram1]
+                                and colors2 = Array.of_list [vram2 lsr 4; vram2 land 0xf; cram2]
+                                in
+                                let find_match = 
+                                    let match_1 = ref 0
+                                    and match_2 = ref 0
+                                    in
+                                    for i1 = 0 to 2 do
+                                        for i2 = 0 to 2 do
+                                            if not !found_match then
+                                                begin
+                                                    let c1 = colors1.(i1)
+                                                    and c2 = colors2.(i2)
+                                                    in
+                                                    if c1 = c2 then
+                                                        begin
+                                                            match_1 := i1;
+                                                            match_2 := i2;
+                                                            found_match := true;
+                                                        end
+                                                end
+                                        done
+                                    done;
+                                    if not !found_match then 
+                                        failwith "Couldn't match color ram values";
+                                    (!match_1, !match_2);
+                                in
+                                let (i1, i2) = find_match in
+                                let swap_char_colors c64char i1 i2 =
+                                    let i1 = i1 + 1
+                                    and i2 = i2 + 1 in
+                                    let new_char = ref [] in
+                                    let swap_row row =
+                                        let new_row = ref 0 in
+                                        for i = 0 to 3 do
+                                            let shift = 2 * i in
+                                            let old_val = (row lsr shift) land 3
+                                            in
+                                            (* multicolor bitmap:
+                                                00 = bg color
+                                                01 = upper nibble of video matrix
+                                                10 = lower nibble of video matrix
+                                                11 = color ram nibble $d800- *)
+                                            let new_val =
+                                                if old_val = i1 then i2
+                                                else if old_val = i2 then i1
+                                                else old_val
+                                            in
+                                            let new_val = new_val lsl shift
+                                            in
+                                            new_row := !new_row lor new_val;
+                                        done;
+                                        new_char := !new_char @ [!new_row]
+                                    in
+                                    List.iter swap_row c64char;
+                                    !new_char
+                                in
+                                let swap_colors colors i1 i2 =
+                                    let tmp = colors.(i1) in
+                                    colors.(i1) <- colors.(i2);
+                                    colors.(i2) <- tmp
+                                in
+                                swap_colors colors1 i1 2;
+                                swap_colors colors2 i2 2;
+                                let char1 = swap_char_colors char1 i1 2
+                                and char2 = swap_char_colors char2 i2 2
+                                and vram1 = colors1.(0) lsl 4 + colors1.(1)
+                                and vram2 = colors2.(0) lsl 4 + colors2.(1)
+                                and cram = colors1.(2)
+                                in
+                                (vram1, vram2, cram, char1, char2)
+                            end
+                        else
+                            (vram1, vram2, cram1, char1, char2)
+                    end
+            in
+            write_int cram_out cram;
+            write_int vram1_out vram1;
+            write_int vram2_out vram2;
+
+            let write c i =
+                write_int c i
+            in
+            List.iter (write char1_out) char1;
+            List.iter (write char2_out) char2;
         done
     with End_of_file -> ();
     close_out cram_out;
+    close_out char1_out;
+    close_out char2_out;
+    close_out vram1_out;
+    close_out vram2_out;
     close_in cram1_in;
-    close_in cram1_in;
+    close_in cram2_in;
+    close_in vram1_in;
+    close_in vram2_in;
+    close_in char1_in;
+    close_in char2_in;
     Unix.unlink (file ^ "1-c.bin");
-    Unix.unlink (file ^ "2-c.bin")
+    Unix.unlink (file ^ "2-c.bin");
+    Unix.rename (file ^ "1-vo.bin") (file ^ "1-v.bin");
+    Unix.rename (file ^ "2-vo.bin") (file ^ "2-v.bin");
+    Unix.rename (file ^ "1o.bin") (file ^ "1.bin");
+    Unix.rename (file ^ "2o.bin") (file ^ "2.bin");
 ;;
 
 let unique_chars = ref false
