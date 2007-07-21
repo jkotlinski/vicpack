@@ -42,7 +42,7 @@ vicpack-osx: vicpack
 
 examples.zip: examples/*.png examples/Makefile
 	rm -f examples.zip
-	zip examples.zip examples/*.png examples/Makefile
+	zip examples.zip examples/*.png examples/Makefile examples/Credits.txt
 
 .SUFFIXES:
 .SUFFIXES: .ml .mli .cmo .cmi .cmx .mll .mly
