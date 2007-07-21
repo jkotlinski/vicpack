@@ -455,6 +455,19 @@ let asslace_viewer = basic_header ^ "
 	lda     #__BGCOLOR__
 	sta     $d021
 
+	ldx	#0
+.memcpy
+	lda	$2000, x
+	sta	$d800, x
+	lda	$2100, x
+	sta	$d900, x
+	lda	$2200, x
+	sta	$da00, x
+	lda	$2300, x
+	sta	$db00, x
+	dex
+	bne	.memcpy
+
 .loop
     lda $d012
     cmp #$ff
@@ -463,22 +476,10 @@ let asslace_viewer = basic_header ^ "
 	lda     #$16 ;vic base = $4000
 	sta     $DD00
 
-	ldx	#0
-.memcpy1_1
-	lda	$2000, x
-	sta	$d800, x
-	lda	$2100, x
-	sta	$d900, x
-	dex
-	bne	.memcpy1_1
-
-.memcpy1_2
-	lda	$2200, x
-	sta	$da00, x
-	lda	$2300, x
-	sta	$db00, x
-	dex
-	bne	.memcpy1_2
+    nop
+    nop
+    nop
+    nop
 
 .loop2
     lda $d012
@@ -488,22 +489,10 @@ let asslace_viewer = basic_header ^ "
 	lda     #$15 ;vic base = $8000
 	sta     $DD00
 
-	ldx	#0
-.memcpy2_1
-	lda	$2400, x
-	sta	$d800, x
-	lda	$2500, x
-	sta	$d900, x
-	dex
-	bne	.memcpy2_1
-
-.memcpy2_2
-	lda	$2600, x
-	sta	$da00, x
-	lda	$2700, x
-	sta	$db00, x
-	dex
-	bne	.memcpy2_2
+    nop
+    nop
+    nop
+    nop
 
     jmp .loop
 
@@ -520,9 +509,7 @@ let asslace_viewer = basic_header ^ "
 !bin \"__FILE__2.bin\"
 
 *= $2000
-!bin \"__FILE__1-c.bin\"
+!bin \"__FILE__-c.bin\"
 
-*= $2400
-!bin \"__FILE__2-c.bin\"
 ";;
 
