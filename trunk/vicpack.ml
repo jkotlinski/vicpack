@@ -402,13 +402,20 @@ let find_closest_color (c:Color.rgb) =
 
 let prepare_for_asslace bmp =
     for y = 0 to bmp#height - 1 do
+        let swap x1 x2 =
+            let tmp = bmp#get x1 y in
+            bmp#set x1 y (bmp#get x2 y);
+            bmp#set x2 y tmp
+        in
         for x = 0 to (bmp#width / 4) - 1 do
             let x = x * 4 in
-            (* swap x+2, y with x+3, y *)
-            let tmp = bmp#get (x+3) y in
-            bmp#set (x+3) y (bmp#get (x+2) y);
-            bmp#set (x+2) y tmp
-        done
+            swap (x+2) (x+3);
+            if y mod 2 = 1 then
+                begin
+                    swap x (x+1);
+                    swap (x+2) (x+3);
+                end
+        done;
     done;
     bmp
 ;;
@@ -615,7 +622,8 @@ let find_escos_bg_colors charlist =
     !bg_colors
 ;;
 
-let find_bg_colors charwidth charlist mode =
+let find_bg_colors charwidth charlist mode debug =
+    if debug then printf "Find bg colors...\n";
     let bg_colors = ref IntSet.empty in
     for i = 0 to 15 do
         bg_colors := IntSet.add i !bg_colors
@@ -624,8 +632,15 @@ let find_bg_colors charwidth charlist mode =
         begin
             let examine_char c64char =
                 let colors = get_colors c64char in
+                let colorCount = IntSet.cardinal colors in
                 if 4 = IntSet.cardinal colors then
-                    bg_colors := IntSet.inter !bg_colors colors
+                    begin
+                        bg_colors := IntSet.inter !bg_colors colors;
+                        if (IntSet.cardinal !bg_colors = 0) then
+                            failwith "Can't find background color!"
+                    end;
+                if (colorCount > 4) then
+                    failwith "Too many colors in a single char!";
             in
             List.iter examine_char charlist
         end
@@ -701,14 +716,14 @@ let do_generate_prg path file mode interlace bg bg2 border use_sprites =
         in failwith msg
 ;;
 
-let process_charlist mode bg escos unique_chars charwidth charheight charlist file =
+let process_charlist mode bg escos unique_chars charwidth charheight debug charlist file =
     let bg_sprite_1 = ref 0
     and bg_sprite_2 = ref 1 
     and bg = ref (bg) in
     if (mode = Multicolor || mode = Fli || mode = Asslace) && (!bg = 0xff) then
         if not escos then
             begin
-                let bgcolors = find_bg_colors charwidth charlist mode in
+                let bgcolors = find_bg_colors charwidth charlist mode debug in
                 let bgcolorlist = IntSet.elements bgcolors in
                 if (List.length bgcolorlist) < 1 then
                     failwith "Too few possible bgcolors found!\n";
@@ -813,10 +828,8 @@ Arg.parse [
     "Convert to hires");
     ("-mc", Arg.Unit (fun () -> mode := Multicolor),
     "Convert to multicolor");
-    (*
     ("-ass", Arg.Unit (fun () -> mode := Asslace; interlace := true),
     "Convert to Asslace");
-    *)
     ("-fli", Arg.Unit (fun () -> mode := Fli),
     "Convert to FLI");
     ("-mci", Arg.Unit (fun () -> mode := Multicolor; interlace := true),
@@ -920,7 +933,8 @@ For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
 
         let charlist = get_charlist rgb charwidth charheight in
 
-        let process_charlist = process_charlist !mode !bg !escos !unique_chars charwidth charheight 
+        let process_charlist = process_charlist !mode !bg !escos !unique_chars
+            charwidth charheight !debug
         and bg2 = ref 0 in
 
         if !interlace then
