@@ -454,20 +454,20 @@ let asslace_viewer = basic_header ^ "
 
     lda     #__BORDERCOLOR__
 	sta     $d020
-	lda     #__BGCOLOR__
+    lda     #__BGCOLOR__
 	sta     $d021
 
     ; ---------------- setup sprites - start
 
-    lda #%01111111
+    lda #$ff
     sta $d015 ;enable all
     sta $d01d ;2x horiz
 
-    lda #%11000000
+    lda #%01000000
     sta $d010 ;xpos msb
     
     ;sprite ptrs
-    ldx #$6 
+    ldx #$7 
 .ptrloop
     lda #$10
     sta $43f8, x
@@ -526,8 +526,9 @@ let asslace_viewer = basic_header ^ "
     cmp #.ypos
     bne -
 
+!if .ypos < $40 {
     nop
-    nop
+}
     nop
     nop
     nop
@@ -545,9 +546,25 @@ let asslace_viewer = basic_header ^ "
 
     lda #($18 + .xoffset + (46 * (sprite-1))) AND $ff ;xpos lsb
     sta $d000 + (sprite-1) * 2
+} else {
+    ;fixup with sprite 7
+    lda #.ypos
+    sta $d00f
+
+    lda #($18 + .xoffset + (46 * (sprite-1))) AND $ff ;xpos lsb
+    sta $d00e
+
+    ;xpos msb
+!if ($18 + .xoffset + (46 * (sprite-1))) AND $100 {
+    lda #%11000000
+} else {
+    lda #%01000000
 }
-}
-}
+    sta $d010
+} ;end of emergency fixup
+} ;end of for sprite
+
+} ;end of do_swap
 
 *= $1000
 spriteswap
