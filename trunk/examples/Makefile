@@ -14,7 +14,7 @@ hires.png.prg: hires.png
 	vicpack -p hires.png
 
 mci.png.prg: mci.png
-	vicpack -p -mci mci.png
+	vicpack -p -mci -s mci.png
 
 asslace.png.prg: asslace.png
 	vicpack -p -ass asslace.png
