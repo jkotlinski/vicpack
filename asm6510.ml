@@ -379,6 +379,27 @@ let mci_viewer = basic_header ^ "
 	lda     #__BGCOLOR__
 	sta     $d021
 
+!if __USE_SPRITES__ {
+    lda #$ff
+    sta $d015 ;enable all
+    sta $d017 ;expand y
+
+!for .sprite, 8 {
+    lda #1 ;x
+    sta $d000 + (.sprite - 1) * 2
+
+    lda #(.sprite - 1) * 42 AND $ff ;y
+    sta $d001 + (.sprite - 1) * 2
+
+    lda # __BORDERCOLOR__
+    sta $d027 + (.sprite - 1)
+
+    lda #$10
+    sta $43f7 + .sprite
+    sta $83f7 + .sprite
+}
+}
+
 	ldx	#0
 .memcpy
 	lda	$2000, x
@@ -433,6 +454,62 @@ let mci_viewer = basic_header ^ "
 
 *= $2000
 !bin \"__FILE__-c.bin\"
+
+!if __USE_SPRITES__ {
+
+!macro SpriteLine .v {
+    !by .v>>16, (.v>>8)&255, .v&255
+}
+
+*= $4400
+
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
+
+*= $8400
+
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
++SpriteLine %########################
+
+}
 ";;
 
 let asslace_viewer = basic_header ^ "

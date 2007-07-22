@@ -691,6 +691,8 @@ let do_generate_prg path file mode interlace bg bg2 border use_sprites =
     let oc = open_out asmfilename in
 
     let str = Str.global_replace (Str.regexp "__FILE__") file src in
+    let str = Str.global_replace (Str.regexp "__USE_SPRITES__") 
+        (if use_sprites then "1" else "0") str in
     let str = Str.global_replace (Str.regexp "__BORDERCOLOR__") (string_of_int border) str in
     let str = Str.global_replace (Str.regexp "__BGCOLOR__") (string_of_int bg) str in
     let str = Str.global_replace (Str.regexp "__BGCOLOR1__") (string_of_int bg) str in
@@ -956,7 +958,7 @@ Arg.parse [
     ("-e2", Arg.Unit (fun () -> escos := true ),
     "ESCOS: Convert to sprites (2x vertical stretch)");
     ("-s", Arg.Unit (fun () -> use_sprites := true),
-    "Use sprite overlays (hires only)");
+    "Use sprites (hires: overlays, mci: hide leftmost column)");
     ("-u", Arg.Unit (fun () -> unique_chars := true),
     "Unique chars, generate map file");
     ("-y", Arg.Int (fun i -> custom_char_height := i),
@@ -985,7 +987,7 @@ usage: vicpack [-options] files
 -ass: Asslace
 -e: ESCOS - convert to sprites (no vertical stretch)
 -e2: ESCOS - convert to sprites (2x vertical stretch)
--s: use sprite overlays (hires only)
+-s: use sprites (hires: overlays, mci: hide leftmost column)
 
 -p: generate .prg file (requires acme)
 -bg n: force background color n (for use with multicolor)
