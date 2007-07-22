@@ -3,6 +3,12 @@
 
 = Changelog =
 
+*22 July 2007: v0.08*
+
+  * Added Asslace conversion (viewer is buggy - needs workaround for badlines)
+  * Bugfix: Win32 path handling
+  * Improved merging of Color RAM for interlaced images
+
 *19th July 2007: v0.07*
 
   * Add path detection (no need to change system path in win32)
@@ -16,4 +22,3 @@
 == Coming Up ==
 
 Path detection (no need to change system path for finding ACME)
-
