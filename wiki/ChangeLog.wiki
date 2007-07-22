@@ -5,7 +5,7 @@
 
 *22nd July 2007: v0.08*
 
-  * Added Asslace conversion (viewer is buggy - needs workaround for badlines)
+  * Added -ass option for Asslace conversion (viewer is buggy - needs workaround for badlines)
   * Bugfix: Win32 path handling
   * Improved merging of Color RAM for interlaced images
 
