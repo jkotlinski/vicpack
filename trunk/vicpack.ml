@@ -982,15 +982,17 @@ usage: vicpack [-options] files
 -mc: multicolor
 -fli: FLI
 -mci: MCI
+-ass: Asslace
 -e: ESCOS - convert to sprites (no vertical stretch)
 -e2: ESCOS - convert to sprites (2x vertical stretch)
+-s: use sprite overlays (hires only)
+
+-p: generate .prg file (requires acme)
 -bg n: force background color n (for use with multicolor)
 -border n: custom border color n
--s: use sprite overlays (hires only)
 -u: unique chars, generate map file
 -y n: custom char/sprite height
 -d: debug mode
--p: generate .prg file (requires acme)
 
 For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
 "
