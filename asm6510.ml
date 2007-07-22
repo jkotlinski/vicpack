@@ -455,6 +455,28 @@ let asslace_viewer = basic_header ^ "
 	lda     #__BGCOLOR__
 	sta     $d021
 
+    ; ---------------- setup sprites - start
+
+    lda #%01111111
+    sta $d015 ;enable all
+    sta $d01d ;2x horiz
+
+    lda #%11100000
+    sta $d010 ;xpos msb
+    
+    ;sprite ptrs
+    ldx #$6 
+.ptrloop
+    lda #$10
+    sta $43f8, x
+    sta $83f8, x
+    lda #0
+    sta $d027, x
+    dex
+    bpl .ptrloop
+
+    ; ---------------- setup sprites - end
+
 	ldx	#0
 .memcpy
 	lda	$2000, x
@@ -473,31 +495,87 @@ let asslace_viewer = basic_header ^ "
     cmp #$ff
     bne .loop
 
-	lda     #$16 ;vic base = $4000
-	sta     $DD00
+    lda     #$16 ;vic base = $4000
+    sta     $DD00
 
-    nop
-    nop
-    nop
-    nop
+    jsr spriteswap
 
 .loop2
     lda $d012
     cmp #$ff
     bne .loop2
 
-	lda     #$15 ;vic base = $8000
-	sta     $DD00
+    lda     #$15 ;vic base = $8000
+    sta     $DD00
 
-    nop
-    nop
-    nop
-    nop
+    jsr spriteswap
 
     jmp .loop
 
+
+!macro do_swap .line, .xoffset {
+.loop
+    lda $d012
+    cmp #.line
+    bne .loop
+
+!for sprite, 7 {
+    sta $d001 + (sprite-1) * 2
+}
+
+!for sprite, 7 {
+    lda #($18 + .xoffset + (48 * (sprite-1))) AND $ff ;xpos lsb
+    sta $d000 + (sprite-1) * 2
+}
+}
+
+*= $1000
+spriteswap
+
++do_swap ($33-1), (-3)
++do_swap ($33-1+21), (-1)
++do_swap ($33-1+21*2), (-3)
++do_swap ($33-1+21*3), (-1)
++do_swap ($33-1+21*4), (-3)
++do_swap ($33-1+21*5), (-1);badline:(
++do_swap ($33-1+21*6), (-3)
++do_swap ($33-1+21*7), (-1)
++do_swap ($33-1+21*8), (-3)
++do_swap ($33-1+21*9), (-1)
+
+    rts
+
+!macro SpriteLine .v {
+    !by .v>>16, (.v>>8)&255, .v&255
+}
+
 *= $4000
 !bin \"__FILE__1-v.bin\"
+
+*= $4400
+
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
+!byte 0 ; pad to 64-byte block
 
 *= $6000
 !bin \"__FILE__1.bin\"
@@ -505,11 +583,35 @@ let asslace_viewer = basic_header ^ "
 *= $8000
 !bin \"__FILE__2-v.bin\"
 
+*= $8400
+
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
++SpriteLine %.#.#.#.#.#.#.#.#.#.#.#.#
++SpriteLine %#.#.#.#.#.#.#.#.#.#.#.#.
+!byte 0 ; pad to 64-byte block
+
 *= $a000
 !bin \"__FILE__2.bin\"
 
 *= $2000
 !bin \"__FILE__-c.bin\"
-
 ";;
 
