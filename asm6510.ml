@@ -463,7 +463,7 @@ let asslace_viewer = basic_header ^ "
     sta $d015 ;enable all
     sta $d01d ;2x horiz
 
-    lda #%11100000
+    lda #%11000000
     sta $d010 ;xpos msb
     
     ;sprite ptrs
@@ -494,7 +494,7 @@ let asslace_viewer = basic_header ^ "
 
 .loop
     lda $d012
-    cmp #$ff
+    cmp #$2a
     bne .loop
 
     lda     #$16 ;vic base = $4000
@@ -504,7 +504,7 @@ let asslace_viewer = basic_header ^ "
 
 .loop2
     lda $d012
-    cmp #$ff
+    cmp #$2a
     bne .loop2
 
     lda     #$15 ;vic base = $8000
@@ -515,35 +515,55 @@ let asslace_viewer = basic_header ^ "
     jmp .loop
 
 
-!macro do_swap .line, .xoffset {
-.loop
+!macro do_swap .line, .xmod {
+.xoffset = -1 - .xmod * 2
+
+!for sprite, 7 {
+-
+!set .ypos = .line + 3 * (sprite - 1) AND $ff
+!if (.ypos % 8 != 3 OR .ypos < $33) AND .ypos < $fb {
     lda $d012
-    cmp #.line
-    bne .loop
+    cmp #.ypos
+    bne -
 
-!for sprite, 7 {
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+
     sta $d001 + (sprite-1) * 2
-}
 
-!for sprite, 7 {
-    lda #($18 + .xoffset + (48 * (sprite-1))) AND $ff ;xpos lsb
+    lda #($18 + .xoffset + (46 * (sprite-1))) AND $ff ;xpos lsb
     sta $d000 + (sprite-1) * 2
+}
 }
 }
 
 *= $1000
 spriteswap
 
-+do_swap ($33-1), (-3)
-+do_swap ($33-1+21), (-1)
-+do_swap ($33-1+21*2), (-3)
-+do_swap ($33-1+21*3), (-1)
-+do_swap ($33-1+21*4), (-3)
-+do_swap ($33-1+21*5), (-1);badline:(
-+do_swap ($33-1+21*6), (-3)
-+do_swap ($33-1+21*7), (-1)
-+do_swap ($33-1+21*8), (-3)
-+do_swap ($33-1+21*9), (-1)
+.base = $33 - 21
++do_swap (.base-1), 0
++do_swap (.base-1+21), 1
++do_swap (.base-1+21*2), 0
++do_swap (.base-1+21*3), 1
++do_swap (.base-1+21*4), 0
++do_swap (.base-1+21*5), 1
++do_swap (.base-1+21*6), 0
++do_swap (.base-1+21*7), 1
++do_swap (.base-1+21*8), 0
++do_swap (.base-1+21*9), 1
++do_swap (.base-1+21*10), 0
 
     rts
 
