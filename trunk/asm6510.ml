@@ -20,6 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
 
+(* Note: FLI viewer code is written by Graham! *)
+
 let basic_header = "
 !macro basic_header {
 	!byte $b, $08, $EF, $00, $9E, $32, $30, $36,$31, $00, $00, $00 
