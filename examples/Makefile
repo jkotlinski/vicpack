@@ -1,5 +1,5 @@
 .PHONY:	all
-all:   	mc.png.prg hires.png.prg hires_w_sprites.png.prg fli.png.prg mci.png.prg
+all:   	mc.png.prg hires.png.prg hires_w_sprites.png.prg fli.png.prg mci.png.prg asslace.png.prg
 
 fli.png.prg: fli.png
 	vicpack -p -fli fli.png
@@ -15,6 +15,9 @@ hires.png.prg: hires.png
 
 mci.png.prg: mci.png
 	vicpack -p -mci mci.png
+
+asslace.png.prg: asslace.png
+	vicpack -p -ass asslace.png
 
 # --------------------------------------------------------------------------
 # Cleanup rules
