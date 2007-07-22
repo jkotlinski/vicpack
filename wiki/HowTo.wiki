@@ -5,7 +5,7 @@
 
 === Win32 ===
 
-Extract archive to e.g. c:\vicpack. Launch program with c:\vicpack\vicpack from DOS command line.
+Extract archive to e.g. c:\vicpack. Launch program with c:\vicpack\vicpack.exe from DOS command line.
 
 Note: Because of a bug in ACME, it's not possible to use drive letters for the image file path when using the -p option.
 
