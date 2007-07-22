@@ -3,9 +3,9 @@
 
 = Get in Touch! =
 
-Send a mail to kotlinski at gmail dot com for feature suggestions and bug reports.
+Send a mail to *kotlinski at gmail dot com* for feature suggestions and bug reports.
 
 ...OR: 
 
-MSN j_kotlinski at hotmail dot com
-AIM ostgut6am
+  * MSN: j_kotlinski at hotmail dot com
+  * AIM: ostgut6am
