@@ -6,7 +6,7 @@
 *22nd July 2007: v0.09*
 
   * Asslace viewer (-ass -p) works!
-  * MCI: -mci -s now hides leftmost column using sprites
+  * MCI: -mci -s now hides leftmost pixel column using sprites
 
 *22nd July 2007: v0.08*
 
