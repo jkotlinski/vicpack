@@ -35,6 +35,8 @@ module Int : INT = struct
 end;;
 module IntSet = Set.Make(Int);;
 
+exception DumpError of int * string ;;
+
 type gfxmode = 
     | Multicolor
     | Hires
@@ -289,7 +291,7 @@ let hires_write ch oc_char (oc_v:out_channel) charwidth charheight bg =
     let escos = (charwidth = 24 ) in
     let colors = ref (get_colors ch) in
     if (IntSet.cardinal !colors > 2) then
-        failwith "Too many colors!";
+        failwith "Too many colors";
     let colorList = (IntSet.elements !colors)
     and colorMap = (Array.make 16 0)
     and vram_val = ref 0 in
@@ -498,8 +500,13 @@ let dump_hires_chars charwidth charheight bg charlist infilename =
     in
     let oc_v = open_out_bin outfilename_v in
 
+    let charcounter = ref 0 in
     let write ch =
-        hires_write ch oc_chars oc_v charwidth charheight bg
+        try
+            hires_write ch oc_chars oc_v charwidth charheight bg;
+            incr charcounter
+        with
+        Failure(s) -> raise (DumpError(!charcounter, s));
     in
     List.iter write charlist;
     close_out oc_chars;
@@ -1006,7 +1013,7 @@ For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
             else
                 file
         in
-        let rgb =
+        let inrgb =
             let oimage = OImages.load file [] in
             match OImages.tag oimage with
             | Index8 img ->
@@ -1023,9 +1030,9 @@ For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
 
         let rgb = if !escos_no_ystretch then
             (* halve width *)
-            rgb#resize None (rgb#width/2) rgb#height
+            inrgb#resize None (inrgb#width/2) inrgb#height
         else
-            rgb
+            inrgb
         in
 
         convert_to_64_colors rgb;
@@ -1058,39 +1065,45 @@ For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
             charwidth charheight !debug
         and bg2 = ref 0 in
 
-        if !interlace then
-            begin
-                (* interlace *)
-                let chars1 = ref []
-                and chars2 = ref [] in
-                let handle ch =
-                    let ch1 = ref []
-                    and ch2 = ref [] in
-                    let rec split ch =
-                        match ch with
-                        | [] -> ()
-                        | _::[] -> failwith "Error"
-                        | p1::p2::tail ->
-                                ch1 := !ch1 @ [p1] @ [p1];
-                                ch2 := !ch2 @ [p2] @ [p2];
-                                split tail
+        try
+            if !interlace then
+                begin
+                    (* interlace *)
+                    let chars1 = ref []
+                    and chars2 = ref [] in
+                    let handle ch =
+                        let ch1 = ref []
+                        and ch2 = ref [] in
+                        let rec split ch =
+                            match ch with
+                            | [] -> ()
+                            | _::[] -> failwith "Error"
+                            | p1::p2::tail ->
+                                    ch1 := !ch1 @ [p1] @ [p1];
+                                    ch2 := !ch2 @ [p2] @ [p2];
+                                    split tail
+                        in
+                        split ch;
+                        chars1 := !chars1 @ [!ch1];
+                        chars2 := !chars2 @ [!ch2]
                     in
-                    split ch;
-                    chars1 := !chars1 @ [!ch1];
-                    chars2 := !chars2 @ [!ch2]
-                in
-                List.iter handle charlist;
+                    List.iter handle charlist;
 
-                bg := process_charlist !chars1 (file ^ "1");
-                bg2 := process_charlist !chars2 (file ^ "2");
+                    bg := process_charlist !chars1 (file ^ "1");
+                    bg2 := process_charlist !chars2 (file ^ "2");
 
-                merge_mci_cram file
-            end
-        else
-            bg := process_charlist charlist file;
+                    merge_mci_cram file
+                end
+            else
+                bg := process_charlist charlist file;
 
-        if !generate_prg then
-            do_generate_prg path file !mode !interlace !bg !bg2 !border !use_sprites; 
+            if !generate_prg then
+                do_generate_prg path file !mode !interlace !bg !bg2 !border !use_sprites; 
 
+        with DumpError (charcount, s) ->
+            let x = (charcount * charwidth) mod inrgb#width 
+            and y = ((charcount * charwidth) / inrgb#width) * charheight 
+            in
+            printf "%s @ location (%d, %d)\n" s x y ;
     ) files;;
 
