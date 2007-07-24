@@ -422,7 +422,28 @@ let prepare_for_asslace bmp =
     bmp
 ;;
 
-let convert_to_64_colors bmp =
+let index_color_match rgb colormap =
+    for y = 0 to rgb#height - 1 do
+        for x = 0 to rgb#width - 1 do
+            let c = rgb#get x y in
+
+            let found = ref false in
+            for colorIt = 0 to (min 16 (Array.length colormap)) - 1 do
+                if c = colormap.(colorIt) then
+                    begin
+                        c.r <- 0;
+                        c.g <- 0;
+                        c.b <- colorIt;
+                        found := true;
+                    end
+            done;
+            assert !found;
+            rgb#set x y c
+        done
+    done
+;;
+
+let pepto_color_match bmp =
     let width = bmp#width in
     let height = bmp#height in
 
@@ -942,6 +963,7 @@ and custom_char_height = ref 0
 and bg = ref 0xff
 and border = ref 0
 and debug = ref false
+and pepto = ref false
 and generate_prg = ref false
 and files = ref []
 and path =
@@ -973,6 +995,8 @@ Arg.parse [
     "Force background color");
     ("-border", Arg.Int (fun i -> border := i; assert ( (i > -1) & (i < 16) ) ),
     "Custom border color");
+    ("-pepto", Arg.Unit (fun () -> pepto := true),
+    "Color match using Pepto's palette");
     ("-d", Arg.Unit (fun () -> debug := true),
     "Debug mode");
     ("-p", Arg.Unit (fun () -> generate_prg := true),
@@ -995,13 +1019,12 @@ usage: vicpack [-options] files
 -overlay: use sprite overlays (hires only)
 
 -p: generate .prg file (requires acme)
+-pepto: color match with Pepto's palette (www.pepto.de/projects/colorvic/)
 -bg n: force background color n (for use with multicolor)
 -border n: custom border color n
 -u: unique chars, generate map file
 -y n: custom char/sprite height
 -d: debug mode
-
-For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
 "
     end;
     List.iter (fun file ->
@@ -1011,24 +1034,25 @@ For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
             else
                 file
         in
-        let inrgb =
-            let oimage = OImages.load file [] in
-            match OImages.tag oimage with
-            | Index8 img ->
-                    let rgb = img#to_rgb24 in
-                    img#destroy;
-                    rgb     
+        let oimage = OImages.load file [] in
+
+        let rgb = match OImages.tag oimage with
+            | Index8 img
             | Index16 img ->
                     let rgb = img#to_rgb24 in
                     img#destroy;
+                    if !pepto then
+                        pepto_color_match rgb
+                    else
+                        index_color_match rgb img#colormap.map;
                     rgb
-            | Rgb24 img -> img
+            | Rgb24 img -> 
+                    if not !pepto then
+                        failwith "Use -pepto for color matching RGB images";
+                    pepto_color_match img;
+                    img
             | _ -> raise (Invalid_argument "not supported") 
         in
-
-        let rgb = inrgb in
-
-        convert_to_64_colors rgb;
 
         let rgb = 
             if !mode = Asslace then
@@ -1095,8 +1119,8 @@ For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
 
         with 
         | DumpError (charcount, s) ->
-            let x = (charcount * charwidth) mod inrgb#width 
-            and y = ((charcount * charwidth) / inrgb#width) * charheight 
+            let x = (charcount * charwidth) mod oimage#width 
+            and y = ((charcount * charwidth) / oimage#width) * charheight 
             in
             printf "%s @ location (%d, %d)\n" s x y ;
         | Failure (s) -> printf "%s\n" s
