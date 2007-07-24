@@ -379,7 +379,6 @@ let mci_viewer = basic_header ^ "
 	lda     #__BGCOLOR__
 	sta     $d021
 
-!if __USE_SPRITES__ {
     lda #$ff
     sta $d015 ;enable all
     sta $d017 ;expand y
@@ -397,7 +396,6 @@ let mci_viewer = basic_header ^ "
     lda #$10
     sta $43f7 + .sprite
     sta $83f7 + .sprite
-}
 }
 
 	ldx	#0
@@ -455,8 +453,6 @@ let mci_viewer = basic_header ^ "
 *= $2000
 !bin \"__FILE__-c.bin\"
 
-!if __USE_SPRITES__ {
-
 !macro SpriteLine .v {
     !by .v>>16, (.v>>8)&255, .v&255
 }
@@ -508,8 +504,6 @@ let mci_viewer = basic_header ^ "
 +SpriteLine %########################
 +SpriteLine %########################
 +SpriteLine %########################
-
-}
 ";;
 
 let asslace_viewer = basic_header ^ "

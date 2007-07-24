@@ -194,28 +194,28 @@ let mc_fli_write hires_ch bg oc_char oc_c oc_v =
     vram_colors
 ;;
 
-let mc_write charwidth charheight hires_ch bg escos_bg1 escos_bg2 oc_char (oc_c:out_channel) (oc_v:out_channel) =
-    let escos = (charwidth = 24) in
+let mc_write charwidth charheight hires_ch bg sprites_bg1 sprites_bg2 oc_char (oc_c:out_channel) (oc_v:out_channel) =
+    let sprites = (charwidth = 24) in
     assert (charwidth * charheight = (List.length hires_ch));
     let ch = downsample hires_ch in
     let colors = ref (get_colors ch) in
     assert ((IntSet.cardinal !colors) < 5);
     colors := IntSet.remove bg !colors;
-    if escos then
+    if sprites then
         begin
-            colors := IntSet.remove escos_bg1 !colors;
-            colors := IntSet.remove escos_bg2 !colors;
+            colors := IntSet.remove sprites_bg1 !colors;
+            colors := IntSet.remove sprites_bg2 !colors;
         end;
     let colorList = (IntSet.elements !colors)
     and colorMap = (Array.make 16 0) in
     Array.set colorMap bg 0;
-    if escos then
+    if sprites then
         begin
-            Array.set colorMap escos_bg1 1;
-            Array.set colorMap escos_bg2 2
+            Array.set colorMap sprites_bg1 1;
+            Array.set colorMap sprites_bg2 2
         end;
 
-    if not escos then
+    if not sprites then
         begin
             (* multicolor bitmap:
                 00 = bg color
@@ -254,7 +254,7 @@ let mc_write charwidth charheight hires_ch bg escos_bg1 escos_bg2 oc_char (oc_c:
         end
     else
         begin
-            (* escos
+            (* sprites
 			00 = $d020, $d021
 			01 = $d025
 			10 = $d026
@@ -288,7 +288,7 @@ let mc_write charwidth charheight hires_ch bg escos_bg1 escos_bg2 oc_char (oc_c:
 
 let hires_write ch oc_char (oc_v:out_channel) charwidth charheight bg =
     assert (charwidth * charheight = (List.length ch));
-    let escos = (charwidth = 24 ) in
+    let sprites = (charwidth = 24 ) in
     let colors = ref (get_colors ch) in
     if (IntSet.cardinal !colors > 2) then
         failwith "Too many colors";
@@ -296,7 +296,7 @@ let hires_write ch oc_char (oc_v:out_channel) charwidth charheight bg =
     and colorMap = (Array.make 16 0)
     and vram_val = ref 0 in
 
-    if escos then
+    if sprites then
         let pick color =
             if color != bg then
                 vram_val := color
@@ -329,7 +329,7 @@ let hires_write ch oc_char (oc_v:out_channel) charwidth charheight bg =
         rowValue := !rowValue lsl 1;
         if pixel != 0xff then
             rowValue := !rowValue + 
-                if escos then
+                if sprites then
                     if pixel != bg then 1 else 0
                 else
                     (Array.get colorMap pixel);
@@ -513,7 +513,7 @@ let dump_hires_chars charwidth charheight bg charlist infilename =
     close_out oc_v
 ;;
 
-let dump_mc_chars escos_bg1 escos_bg2 mode charwidth charheight bg charlist infilename =
+let dump_mc_chars sprites_bg1 sprites_bg2 mode charwidth charheight bg charlist infilename =
     let outfilename_chars = infilename ^ ".bin" in
     let oc_chars = open_out_bin outfilename_chars in
 
@@ -526,7 +526,7 @@ let dump_mc_chars escos_bg1 escos_bg2 mode charwidth charheight bg charlist infi
     let vram_colors = ref [] in
     let write ch =
         if mode = Multicolor || mode = Asslace then
-            mc_write charwidth charheight ch bg escos_bg1 escos_bg2 oc_chars oc_c oc_v
+            mc_write charwidth charheight ch bg sprites_bg1 sprites_bg2 oc_chars oc_c oc_v
         else
             (* Fli *)
             vram_colors := !vram_colors @ mc_fli_write ch bg oc_chars oc_c oc_v;
@@ -594,7 +594,7 @@ let rec calc_charmap charlist unique_chars =
     !retval
 ;;
 
-let find_escos_mc_bg_colors charlist =
+let find_sprites_mc_bg_colors charlist =
     let bg_colors = ref IntSet.empty in
     for i = 0 to 15 do
         bg_colors := IntSet.add i !bg_colors
@@ -612,7 +612,7 @@ let find_escos_mc_bg_colors charlist =
     !bg_colors
 ;;
 
-let find_escos_bg_colors charlist =
+let find_sprites_bg_colors charlist =
     let bg_colors = ref IntSet.empty in
     for i = 0 to 15 do
         bg_colors := IntSet.add i !bg_colors
@@ -674,10 +674,10 @@ let find_bg_colors charwidth charlist mode debug =
     !bg_colors
 ;;
 
-let do_generate_prg path file mode interlace bg bg2 border use_sprites =
+let do_generate_prg path file mode interlace bg bg2 border sprite_overlays =
     let src = 
         if mode = Hires then 
-            if use_sprites then
+            if sprite_overlays then
                 Asm6510.hires_sprite_viewer
             else
                 Asm6510.hires_viewer
@@ -699,7 +699,7 @@ let do_generate_prg path file mode interlace bg bg2 border use_sprites =
 
     let str = Str.global_replace (Str.regexp "__FILE__") file src in
     let str = Str.global_replace (Str.regexp "__USE_SPRITES__") 
-        (if use_sprites then "1" else "0") str in
+        (if sprite_overlays then "1" else "0") str in
     let str = Str.global_replace (Str.regexp "__BORDERCOLOR__") (string_of_int border) str in
     let str = Str.global_replace (Str.regexp "__BGCOLOR__") (string_of_int bg) str in
     let str = Str.global_replace (Str.regexp "__BGCOLOR1__") (string_of_int bg) str in
@@ -725,12 +725,12 @@ let do_generate_prg path file mode interlace bg bg2 border use_sprites =
         in failwith msg
 ;;
 
-let process_charlist mode bg escos unique_chars charwidth charheight debug charlist file =
+let process_charlist mode bg sprites unique_chars charwidth charheight debug charlist file =
     let bg_sprite_1 = ref 0
     and bg_sprite_2 = ref 1 
     and bg = ref (bg) in
     if (mode = Multicolor || mode = Fli || mode = Asslace) && (!bg = 0xff) then
-        if not escos then
+        if not sprites then
             begin
                 let bgcolors = find_bg_colors charwidth charlist mode debug in
                 let bgcolorlist = IntSet.elements bgcolors in
@@ -742,8 +742,8 @@ let process_charlist mode bg escos unique_chars charwidth charheight debug charl
             end
         else
             begin
-                (* escos multicolor *)
-                let bgcolors = find_escos_mc_bg_colors charlist in
+                (* sprites multicolor *)
+                let bgcolors = find_sprites_mc_bg_colors charlist in
                 let bgcolorlist = IntSet.elements bgcolors in
                 if (List.length bgcolorlist) < 3 then
                     failwith "Too few possible bgcolors found!\n";
@@ -756,9 +756,9 @@ let process_charlist mode bg escos unique_chars charwidth charheight debug charl
                     assert (IntSet.mem !bg bgcolors);
             end;
 
-    if mode = Hires && escos = true && (!bg = 0xff) then
+    if mode = Hires && sprites = true && (!bg = 0xff) then
         begin
-            let bgcolors = find_escos_bg_colors charlist in
+            let bgcolors = find_sprites_bg_colors charlist in
             let bgcolorlist = IntSet.elements bgcolors in
             if (List.length bgcolorlist) < 1 then
                 failwith "Too few possible bgcolors found!\n";
@@ -933,10 +933,9 @@ let merge_mci_cram file =
 
 let unique_chars = ref false
 and mode = ref Hires
-and escos = ref false
-and escos_no_ystretch = ref false
+and sprites = ref false
 and interlace = ref false
-and use_sprites = ref false
+and sprite_overlays = ref false
 and custom_char_height = ref 0
 and bg = ref 0xff
 and border = ref 0
@@ -960,12 +959,10 @@ Arg.parse [
     "Convert to FLI");
     ("-mci", Arg.Unit (fun () -> mode := Multicolor; interlace := true),
     "Convert to MCI");
-    ("-e", Arg.Unit (fun () -> escos := true; escos_no_ystretch := true),
-    "ESCOS: Convert to sprites (no vertical stretch)");
-    ("-e2", Arg.Unit (fun () -> escos := true ),
-    "ESCOS: Convert to sprites (2x vertical stretch)");
-    ("-s", Arg.Unit (fun () -> use_sprites := true),
-    "Use sprites (hires: overlays, mci: hide leftmost column)");
+    ("-sprite", Arg.Unit (fun () -> sprites := true ),
+    "Sprite conversion");
+    ("-overlay", Arg.Unit (fun () -> sprite_overlays := true),
+    "Use sprite overlays (hires only)");
     ("-u", Arg.Unit (fun () -> unique_chars := true),
     "Unique chars, generate map file");
     ("-y", Arg.Int (fun i -> custom_char_height := i),
@@ -992,9 +989,8 @@ usage: vicpack [-options] files
 -fli: FLI
 -mci: MCI
 -ass: Asslace
--e: ESCOS - convert to sprites (no vertical stretch)
--e2: ESCOS - convert to sprites (2x vertical stretch)
--s: use sprites (hires: overlays, mci: hide leftmost column)
+-sprite: sprite conversion
+-overlay: use sprite overlays (hires only)
 
 -p: generate .prg file (requires acme)
 -bg n: force background color n (for use with multicolor)
@@ -1028,12 +1024,7 @@ For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
             | _ -> raise (Invalid_argument "not supported") 
         in
 
-        let rgb = if !escos_no_ystretch then
-            (* halve width *)
-            inrgb#resize None (inrgb#width/2) inrgb#height
-        else
-            inrgb
-        in
+        let rgb = inrgb in
 
         convert_to_64_colors rgb;
 
@@ -1044,24 +1035,24 @@ For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
                 rgb
         in
         
-        assert (not (!escos && !use_sprites));
+        assert (not (!sprites && !sprite_overlays));
 
-        let charwidth = if !escos then 24 else 8
+        let charwidth = if !sprites then 24 else 8
         and charheight = 
             if !custom_char_height != 0 then 
                 begin
                     printf "custom char height: %d\n" !custom_char_height;
                     !custom_char_height
                 end
-            else if !escos then 21 else 8 
+            else if !sprites then 21 else 8 
         in
 
-        if !mode = Hires & !use_sprites then
+        if !mode = Hires & !sprite_overlays then
             Spriteoverlays.handle_sprite_overlays file rgb !debug charwidth charheight;
 
         let charlist = get_charlist rgb charwidth charheight in
 
-        let process_charlist = process_charlist !mode !bg !escos !unique_chars
+        let process_charlist = process_charlist !mode !bg !sprites !unique_chars
             charwidth charheight !debug
         and bg2 = ref 0 in
 
@@ -1098,7 +1089,7 @@ For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
                 bg := process_charlist charlist file;
 
             if !generate_prg then
-                do_generate_prg path file !mode !interlace !bg !bg2 !border !use_sprites; 
+                do_generate_prg path file !mode !interlace !bg !bg2 !border !sprite_overlays; 
 
         with DumpError (charcount, s) ->
             let x = (charcount * charwidth) mod inrgb#width 
