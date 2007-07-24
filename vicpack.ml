@@ -1006,7 +1006,7 @@ Arg.parse [
 let files = List.rev !files in
 if ((List.length files) = 0) then
     begin
-        printf "vicpack v0.09. Copyright (c) 2007, Johan Kotlinski
+        printf "vicpack v0.10. Copyright (c) 2007, Johan Kotlinski
 
 usage: vicpack [-options] files
 
