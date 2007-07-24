@@ -637,6 +637,7 @@ let find_bg_colors charwidth charlist mode debug =
     done;
     if mode != Fli then
         begin
+            let charcount = ref 0 in
             let examine_char c64char =
                 let colors = get_colors c64char in
                 let colorCount = IntSet.cardinal colors in
@@ -647,7 +648,8 @@ let find_bg_colors charwidth charlist mode debug =
                             failwith "Can't find background color!"
                     end;
                 if (colorCount > 4) then
-                    failwith "Too many colors in a single char!";
+                    raise (DumpError(!charcount, "Too many colors in a single char"));
+                incr charcount
             in
             List.iter examine_char charlist
         end
@@ -1047,16 +1049,16 @@ For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
             else if !sprites then 21 else 8 
         in
 
-        if !mode = Hires & !sprite_overlays then
-            Spriteoverlays.handle_sprite_overlays file rgb !debug charwidth charheight;
-
-        let charlist = get_charlist rgb charwidth charheight in
-
-        let process_charlist = process_charlist !mode !bg !sprites !unique_chars
-            charwidth charheight !debug
-        and bg2 = ref 0 in
-
         try
+            if !mode = Hires & !sprite_overlays then
+                Spriteoverlays.handle_sprite_overlays file rgb !debug charwidth charheight;
+
+            let charlist = get_charlist rgb charwidth charheight in
+
+            let process_charlist = process_charlist !mode !bg !sprites !unique_chars
+                charwidth charheight !debug
+            and bg2 = ref 0 in
+
             if !interlace then
                 begin
                     (* interlace *)
@@ -1091,10 +1093,12 @@ For best results, use Pepto's palette: http://www.pepto.de/projects/colorvic/
             if !generate_prg then
                 do_generate_prg path file !mode !interlace !bg !bg2 !border !sprite_overlays; 
 
-        with DumpError (charcount, s) ->
+        with 
+        | DumpError (charcount, s) ->
             let x = (charcount * charwidth) mod inrgb#width 
             and y = ((charcount * charwidth) / inrgb#width) * charheight 
             in
             printf "%s @ location (%d, %d)\n" s x y ;
+        | Failure (s) -> printf "%s\n" s
     ) files;;
 
