@@ -29,3 +29,7 @@ Some examples can be found in the examples archive.
     vicpack -p hires.png
     vicpack -p -mci mci.png
 }}}
+
+== Running your .prg files ==
+
+For best results (if viewing with emulator), use Vice v1.21 (or later) and no cartridges plugged in.
