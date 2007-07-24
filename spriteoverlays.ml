@@ -566,10 +566,7 @@ let handle_sprite_overlays file bmp debug charwidth charheight =
                         end
                 done;
                 if not !did_clean then
-                    begin
-                        printf "\nFailed: Too many sprites at line %d\n" swapline;
-                        failwith "Too many sprites"
-                    end;
+                    failwith ("Too many sprites at line " ^ (string_of_int swapline));
                     
                 slot := find_free_slot spritemap;
                 assert (!slot != 0xff)
