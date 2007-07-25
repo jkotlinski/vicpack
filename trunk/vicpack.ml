@@ -1121,6 +1121,8 @@ usage: vicpack [-options] files
             and y = ((charcount * charwidth) / oimage#width) * charheight 
             in
             printf "%s @ location (%d, %d)\n" s x y ;
-        | Failure (s) -> printf "%s\n" s
-    ) files;;
+            exit 1
+        | Failure (s) -> printf "%s\n" s; exit 1
+    ) files;
+;;
 
