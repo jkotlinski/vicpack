@@ -760,7 +760,6 @@ let process_charlist mode bg sprites unique_chars charwidth charheight debug cha
                 if (List.length bgcolorlist) < 1 then
                     failwith "Too few possible bgcolors found!\n";
                     bg := List.hd bgcolorlist;
-                    printf "bgcolor: %d\n" !bg;
                     assert (IntSet.mem !bg bgcolors);
             end
         else
