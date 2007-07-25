@@ -733,7 +733,6 @@ let do_generate_prg path file mode interlace bg bg2 border sprite_overlays =
     let acme = 
         if Sys.os_type = "Cygwin" then "./acme.exe" else "acme" in
     let cmd = path ^ acme ^ " " ^ asmfilename in
-    printf "%s\n"  cmd;
     let status = Unix.system cmd in 
     match status with
     Unix.WEXITED 0 -> ()
