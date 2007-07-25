@@ -709,7 +709,10 @@ let do_generate_prg path file mode interlace bg bg2 border sprite_overlays =
                 Asm6510.hires_viewer
         else
             if mode = Fli then
-                Asm6510.fli_viewer
+                if interlace then
+                    Asm6510.ifli_viewer
+                else
+                    Asm6510.fli_viewer
             else
                 (* mode = Multicolor or Asslace *)
                 if interlace then
@@ -982,6 +985,8 @@ Arg.parse [
     "Convert to Asslace");
     ("-fli", Arg.Unit (fun () -> mode := Fli),
     "Convert to FLI");
+    ("-ifli", Arg.Unit (fun () -> mode := Fli; interlace := true),
+    "Convert to IFLI");
     ("-mci", Arg.Unit (fun () -> mode := Multicolor; interlace := true),
     "Convert to MCI");
     ("-sprite", Arg.Unit (fun () -> sprites := true ),
@@ -1014,6 +1019,7 @@ usage: vicpack [-options] files
 -h: hires (default)
 -mc: multicolor
 -fli: FLI
+-ifli: IFLI
 -mci: MCI
 -ass: Asslace
 -sprite: sprite conversion
@@ -1110,7 +1116,8 @@ usage: vicpack [-options] files
                     bg := process_charlist !chars1 (file ^ "1");
                     bg2 := process_charlist !chars2 (file ^ "2");
 
-                    merge_mci_cram file
+                    if !mode = Multicolor then
+                        merge_mci_cram file
                 end
             else
                 bg := process_charlist charlist file;

@@ -1,2 +1,2 @@
-map <F7> :!vicpack -d examples/hires_w_sprites.png<CR>
-map <F8> :!x64 examples/asslace.png.prg<CR>
+map <F7> :!vicpack -ifli -p -d examples/ifli.gif<CR>
+map <F8> :!x64 examples/ifli.gif.prg<CR>
