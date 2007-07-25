@@ -283,7 +283,10 @@ let mc_write charwidth charheight hires_ch bg sprites_bg1 sprites_bg2 oc_char (o
             pixelCount := 0
         end
     in
-    List.iter write ch
+    List.iter write ch;
+    if sprites then
+        (* pad to 64 bytes *)
+        write_int oc_char 0;
 ;;
 
 let hires_write ch oc_char (oc_v:out_channel) charwidth charheight bg =
